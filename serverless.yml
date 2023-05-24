@@ -1,0 +1,42 @@
+service: recruit-multimedia-microservice
+
+plugins:
+  - serverless-offline
+  - serverless-esbuild
+
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  region: ${opt:region, self:provider.region}
+  esbuild:
+    bundle: true
+    platform: node
+    target: node16
+    exclude:
+      - aws-sdk
+    
+provider:
+  name: aws
+  runtime: nodejs16.x
+  region: us-east-1
+  stage: dev
+  timeout: 30
+  profile: recruit
+  versionFunctions: false
+  iam:
+    role:
+      name: lambda-s3-access-role
+      statements:
+        - Effect: 'Allow'
+          Resource: '*'
+          Action: 
+            - s3:GetObject
+
+functions:
+  getImages:
+    description: v${file(./package.json):version}
+    handler: src/handlers/getImage.handler
+    events:
+      - httpApi:
+          path: /images/{type}/{key}
+          method: get
+          
