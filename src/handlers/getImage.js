@@ -1,5 +1,5 @@
 const AWS = require('aws-sdk');
-const jimp = require('jimp')
+const sharp = require('sharp')
 
 const { getImageParamsShape } = require('../validators/getImage.validator');
 
@@ -42,20 +42,17 @@ module.exports.handler = async (event) => {
       Key: key,
     }).promise()
       .then(async (data) => {
-        const image = await jimp.read(data.Body)
+        const source = sharp(data.Body);
 
-        image
-          .resize(+width, +height)
-          .quality(100);
-
-        const converted = await image.getBufferAsync(jimp.MIME_JPEG);
-
-        const imageToBase64 =  converted.toString('base64');
+        const resized = source.resize(+width, +height);
+        const formattedImage = resized.toFormat('jpeg')
+        const imageBuffer = await formattedImage.toBuffer();
+        const imageToBase64 = imageBuffer.toString('base64')
 
         const response = {
           statusCode: 200,
           headers: {
-            'Content-Type': jimp.MIME_JPEG,
+            'Content-Type': "image/jpeg",
           },
           body: imageToBase64,
           isBase64Encoded: true
@@ -63,10 +60,10 @@ module.exports.handler = async (event) => {
 
         return response;
       })
-      .catch((e) => {
+      .catch((err) => {
         // NOTE: indicates it is not an AWS error
-        if(e.statusCode !== 404 ){
-          console.error(new Date(), e)
+        if(err.statusCode !== 404 ){
+          console.error(new Date(), err)
         };
 
         return { statusCode: 404}}

@@ -14,7 +14,6 @@
   "dependencies": {
     "aws-sdk": "^2.1381.0",
     "esbuild": "^0.17.11",
-    "jimp": "^0.22.8",
     "yup": "^1.1.1"
   },
   "devDependencies": {
